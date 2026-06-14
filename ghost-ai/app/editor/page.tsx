@@ -28,6 +28,7 @@ export default function EditorPage() {
         onNewProject={dialogs.openCreate}
         onRename={dialogs.openRename}
         onDelete={dialogs.openDelete}
+        projects={dialogs.projects}
       />
 
       <main className="pt-12 min-h-dvh flex items-center justify-center">

@@ -8,7 +8,7 @@ export interface Project {
   owned: boolean;
 }
 
-export const MOCK_PROJECTS: Project[] = [
+const INITIAL_PROJECTS: Project[] = [
   { id: "1", name: "My Architecture", owned: true },
   { id: "2", name: "Cloud Infra Design", owned: true },
   { id: "3", name: "Shared Diagram", owned: false },
@@ -17,6 +17,7 @@ export const MOCK_PROJECTS: Project[] = [
 type DialogType = "create" | "rename" | "delete" | null;
 
 export function useProjectDialogs() {
+  const [projects, setProjects] = useState<Project[]>(INITIAL_PROJECTS);
   const [dialog, setDialog] = useState<DialogType>(null);
   const [targetProject, setTargetProject] = useState<Project | null>(null);
   const [nameInput, setNameInput] = useState("");
@@ -48,6 +49,10 @@ export function useProjectDialogs() {
   function handleCreate() {
     setLoading(true);
     setTimeout(() => {
+      setProjects((prev) => [
+        ...prev,
+        { id: Date.now().toString(), name: nameInput.trim(), owned: true },
+      ]);
       setLoading(false);
       close();
     }, 400);
@@ -56,6 +61,11 @@ export function useProjectDialogs() {
   function handleRename() {
     setLoading(true);
     setTimeout(() => {
+      setProjects((prev) =>
+        prev.map((p) =>
+          p.id === targetProject?.id ? { ...p, name: nameInput.trim() } : p
+        )
+      );
       setLoading(false);
       close();
     }, 400);
@@ -64,6 +74,7 @@ export function useProjectDialogs() {
   function handleDelete() {
     setLoading(true);
     setTimeout(() => {
+      setProjects((prev) => prev.filter((p) => p.id !== targetProject?.id));
       setLoading(false);
       close();
     }, 400);
@@ -76,6 +87,7 @@ export function useProjectDialogs() {
     .replace(/^-|-$/g, "");
 
   return {
+    projects,
     dialog,
     targetProject,
     nameInput,

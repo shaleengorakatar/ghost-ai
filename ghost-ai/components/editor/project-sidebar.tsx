@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MOCK_PROJECTS, Project } from "@/hooks/use-project-dialogs";
+import { Project } from "@/hooks/use-project-dialogs";
 
 interface ProjectSidebarProps {
   isOpen: boolean;
@@ -18,10 +18,8 @@ interface ProjectSidebarProps {
   onNewProject: () => void;
   onRename: (project: Project) => void;
   onDelete: (project: Project) => void;
+  projects: Project[];
 }
-
-const myProjects = MOCK_PROJECTS.filter((p) => p.owned);
-const sharedProjects = MOCK_PROJECTS.filter((p) => !p.owned);
 
 export function ProjectSidebar({
   isOpen,
@@ -29,7 +27,10 @@ export function ProjectSidebar({
   onNewProject,
   onRename,
   onDelete,
+  projects,
 }: ProjectSidebarProps) {
+  const myProjects = projects.filter((p) => p.owned);
+  const sharedProjects = projects.filter((p) => !p.owned);
   return (
     <>
       {isOpen && (
