@@ -42,7 +42,7 @@ export function CreateProjectDialog(props: Props) {
           <Button variant="outline" onClick={close} disabled={loading}>
             Cancel
           </Button>
-          <Button onClick={handleCreate} disabled={!nameInput.trim() || loading}>
+          <Button onClick={handleCreate} disabled={!nameInput.trim() || !slug || loading}>
             Create
           </Button>
         </DialogFooter>

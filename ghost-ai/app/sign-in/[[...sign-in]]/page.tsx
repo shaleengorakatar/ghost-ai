@@ -61,7 +61,7 @@ export default function SignInPage() {
       </aside>
 
       <main className="flex w-full lg:w-1/2 items-center justify-center px-4 py-12">
-        <SignIn forceRedirectUrl="/editor" />
+        <SignIn fallbackRedirectUrl="/editor" />
       </main>
     </div>
   );

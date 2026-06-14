@@ -61,7 +61,7 @@ export default function SignUpPage() {
       </aside>
 
       <main className="flex w-full lg:w-1/2 items-center justify-center px-4 py-12">
-        <SignUp forceRedirectUrl="/editor" />
+        <SignUp fallbackRedirectUrl="/editor" />
       </main>
     </div>
   );
