@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Project } from "@/hooks/use-project-dialogs";
+import { Project } from "@/hooks/use-project-actions";
 
 interface ProjectSidebarProps {
   isOpen: boolean;
@@ -19,6 +19,7 @@ interface ProjectSidebarProps {
   onRename: (project: Project) => void;
   onDelete: (project: Project) => void;
   projects: Project[];
+  activeProjectId?: string;
 }
 
 export function ProjectSidebar({
@@ -28,6 +29,7 @@ export function ProjectSidebar({
   onRename,
   onDelete,
   projects,
+  activeProjectId,
 }: ProjectSidebarProps) {
   const myProjects = projects.filter((p) => p.owned);
   const sharedProjects = projects.filter((p) => !p.owned);
@@ -79,6 +81,7 @@ export function ProjectSidebar({
                       project={project}
                       onRename={onRename}
                       onDelete={onDelete}
+                      active={project.id === activeProjectId}
                     />
                   ))}
                 </ul>
@@ -95,7 +98,7 @@ export function ProjectSidebar({
               <ScrollArea className="h-full">
                 <ul className="px-2 py-2 space-y-0.5">
                   {sharedProjects.map((project) => (
-                    <ProjectItem key={project.id} project={project} />
+                    <ProjectItem key={project.id} project={project} active={project.id === activeProjectId} />
                   ))}
                 </ul>
               </ScrollArea>
@@ -118,11 +121,12 @@ interface ProjectItemProps {
   project: Project;
   onRename?: (project: Project) => void;
   onDelete?: (project: Project) => void;
+  active?: boolean;
 }
 
-function ProjectItem({ project, onRename, onDelete }: ProjectItemProps) {
+function ProjectItem({ project, onRename, onDelete, active }: ProjectItemProps) {
   return (
-    <li className="group flex items-center gap-1 rounded-md px-2 py-1.5 hover:bg-accent cursor-pointer">
+    <li className={`group flex items-center gap-1 rounded-md px-2 py-1.5 hover:bg-accent cursor-pointer ${active ? "bg-accent" : ""}`}>
       <span className="flex-1 text-sm truncate">{project.name}</span>
       {project.owned && onRename && onDelete && (
         <DropdownMenu>

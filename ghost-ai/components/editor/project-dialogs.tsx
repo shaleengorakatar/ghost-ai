@@ -11,12 +11,12 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useProjectDialogs } from "@/hooks/use-project-dialogs";
+import { useProjectActions } from "@/hooks/use-project-actions";
 
-type Props = ReturnType<typeof useProjectDialogs>;
+type Props = ReturnType<typeof useProjectActions>;
 
 export function CreateProjectDialog(props: Props) {
-  const { dialog, nameInput, setNameInput, slug, loading, close, handleCreate } = props;
+  const { dialog, nameInput, setNameInput, roomId, loading, close, handleCreate } = props;
 
   return (
     <Dialog open={dialog === "create"} onOpenChange={(open) => !open && close()}>
@@ -34,7 +34,7 @@ export function CreateProjectDialog(props: Props) {
           />
           {nameInput.trim() && (
             <p className="text-xs text-muted-foreground">
-              Slug: <span className="font-mono">{slug}</span>
+              Room ID: <span className="font-mono">{roomId}</span>
             </p>
           )}
         </div>
@@ -42,7 +42,7 @@ export function CreateProjectDialog(props: Props) {
           <Button variant="outline" onClick={close} disabled={loading}>
             Cancel
           </Button>
-          <Button onClick={handleCreate} disabled={!nameInput.trim() || !slug || loading}>
+          <Button onClick={handleCreate} disabled={!nameInput.trim() || !roomId || loading}>
             Create
           </Button>
         </DialogFooter>
