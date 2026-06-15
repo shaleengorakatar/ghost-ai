@@ -17,6 +17,8 @@ Update this file whenever the current phase, active feature, or implementation s
 - Feature 03: Auth — @clerk/nextjs + @clerk/ui installed; ClerkProvider with dark theme + CSS variable overrides wraps root layout; proxy.ts at root protects all routes except /sign-in and /sign-up; two-panel sign-in/sign-up pages (left: logo + feature list, right: Clerk form; mobile: form only); / redirects auth→/editor, unauth→/sign-in; UserButton added to EditorNavbar right section; editor stub page at /editor.
 - Feature 04: Project Dialogs — editor home (heading + description + New Project button), useProjectDialogs hook (dialog/form/loading state), Create dialog (name input + live slug preview), Rename dialog (prefilled, auto-focus, Enter submits), Delete dialog (destructive confirm), sidebar project items with Rename/Delete dropdown (owned only), mobile backdrop scrim, mock project data.
 - Feature 05: Prisma — multi-file schema (prisma/schema.prisma + prisma/models/project.prisma) with Project and ProjectCollaborator models; Prisma client generated to app/generated/prisma; lib/prisma.ts cached singleton branching on DATABASE_URL (prisma+postgres:// → Accelerate via accelerateUrl + withAccelerate(), else → @prisma/adapter-pg); migration SQL created and applied; npm run build passes.
+- Feature 06: Projects APIs — REST route handlers for GET /api/projects (list), POST /api/projects (create, defaults name to "Untitled Project"), PATCH /api/projects/[projectId] (rename, owner-only), DELETE /api/projects/[projectId] (delete, owner-only); 401 for unauthenticated, 403 for non-owner mutations; lib/prisma.ts return typed as PrismaClient to resolve Accelerate union type issue; npm run build passes.
+- Feature 07: Wire Editor Home — editor page converted to async server component fetching owned projects via lib/projects.ts (getOwnedProjects); EditorHome client component receives initialProjects; useProjectActions hook (replaces useProjectDialogs) generates slug+unique suffix as roomId, POSTs with roomId used as project ID, navigates to /editor/[roomId] on create, redirects to /editor if deleting active workspace otherwise router.refresh(); create dialog shows Room ID preview; npm run build passes.
 
 ## In Progress
 
@@ -24,7 +26,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Feature 06 (TBD)
+- Feature 08 (TBD)
 
 ## Open Questions
 
