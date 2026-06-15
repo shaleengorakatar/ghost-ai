@@ -19,10 +19,13 @@ export function useProjectActions(initialProjects: Project[]) {
   const [targetProject, setTargetProject] = useState<Project | null>(null);
   const [nameInput, setNameInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [roomSuffix, setRoomSuffix] = useState(() => Math.random().toString(36).slice(2, 7));
 
   function openCreate() {
     setNameInput("");
     setTargetProject(null);
+    setRoomSuffix(Math.random().toString(36).slice(2, 7));
     setDialog("create");
   }
 
@@ -41,6 +44,7 @@ export function useProjectActions(initialProjects: Project[]) {
     setDialog(null);
     setTargetProject(null);
     setNameInput("");
+    setError(null);
   }
 
   const slug = nameInput
@@ -49,14 +53,13 @@ export function useProjectActions(initialProjects: Project[]) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 
-  const roomId = slug
-    ? `${slug}-${Math.random().toString(36).slice(2, 7)}`
-    : "";
+  const roomId = slug ? `${slug}-${roomSuffix}` : "";
 
   async function handleCreate() {
     if (!slug) return;
     const id = roomId;
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch("/api/projects", {
         method: "POST",
@@ -66,6 +69,9 @@ export function useProjectActions(initialProjects: Project[]) {
       if (res.ok) {
         close();
         router.push(`/editor/${id}`);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "Failed to create project");
       }
     } finally {
       setLoading(false);
@@ -75,6 +81,7 @@ export function useProjectActions(initialProjects: Project[]) {
   async function handleRename() {
     if (!targetProject) return;
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch(`/api/projects/${targetProject.id}`, {
         method: "PATCH",
@@ -89,6 +96,9 @@ export function useProjectActions(initialProjects: Project[]) {
         );
         close();
         router.refresh();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "Failed to rename project");
       }
     } finally {
       setLoading(false);
@@ -98,6 +108,7 @@ export function useProjectActions(initialProjects: Project[]) {
   async function handleDelete() {
     if (!targetProject) return;
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch(`/api/projects/${targetProject.id}`, {
         method: "DELETE",
@@ -110,6 +121,9 @@ export function useProjectActions(initialProjects: Project[]) {
         } else {
           router.refresh();
         }
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "Failed to delete project");
       }
     } finally {
       setLoading(false);
@@ -123,6 +137,7 @@ export function useProjectActions(initialProjects: Project[]) {
     nameInput,
     setNameInput,
     loading,
+    error,
     slug,
     roomId,
     openCreate,

@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import prisma from "@/lib/prisma";
 
 export async function GET() {
@@ -21,9 +22,18 @@ export async function POST(request: Request) {
   const name = (body.name as string | undefined)?.trim() || "Untitled Project";
   const roomId = (body.roomId as string | undefined)?.trim() || undefined;
 
-  const project = await prisma.project.create({
-    data: { ...(roomId ? { id: roomId } : {}), ownerId: userId, name },
-  });
-
-  return Response.json(project, { status: 201 });
+  try {
+    const project = await prisma.project.create({
+      data: { ...(roomId ? { id: roomId } : {}), ownerId: userId, name },
+    });
+    return Response.json(project, { status: 201 });
+  } catch (err) {
+    if (err instanceof PrismaClientKnownRequestError) {
+      if (err.code === "P2002") {
+        return Response.json({ error: "Project ID already exists" }, { status: 409 });
+      }
+      return Response.json({ error: "Invalid request" }, { status: 400 });
+    }
+    return Response.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

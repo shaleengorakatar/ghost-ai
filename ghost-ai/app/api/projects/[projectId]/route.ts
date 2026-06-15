@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import prisma from "@/lib/prisma";
 
 export async function PATCH(
@@ -19,12 +20,18 @@ export async function PATCH(
   const name = (body.name as string | undefined)?.trim();
   if (!name) return Response.json({ error: "Name is required" }, { status: 400 });
 
-  const updated = await prisma.project.update({
-    where: { id: projectId },
-    data: { name },
-  });
-
-  return Response.json(updated);
+  try {
+    const updated = await prisma.project.update({
+      where: { id: projectId },
+      data: { name },
+    });
+    return Response.json(updated);
+  } catch (err) {
+    if (err instanceof PrismaClientKnownRequestError && err.code === "P2025") {
+      return Response.json({ error: "Not found" }, { status: 404 });
+    }
+    return Response.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
 
 export async function DELETE(
@@ -41,7 +48,13 @@ export async function DELETE(
   if (project.ownerId !== userId)
     return Response.json({ error: "Forbidden" }, { status: 403 });
 
-  await prisma.project.delete({ where: { id: projectId } });
-
-  return new Response(null, { status: 204 });
+  try {
+    await prisma.project.delete({ where: { id: projectId } });
+    return new Response(null, { status: 204 });
+  } catch (err) {
+    if (err instanceof PrismaClientKnownRequestError && err.code === "P2025") {
+      return Response.json({ error: "Not found" }, { status: 404 });
+    }
+    return Response.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
