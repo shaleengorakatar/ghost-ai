@@ -2,7 +2,12 @@ import { auth, clerkClient } from "@clerk/nextjs/server";
 import prisma from "@/lib/prisma";
 
 async function getOwnerOrFail(projectId: string, userId: string) {
-  const project = await prisma.project.findFirst({ where: { id: projectId } });
+  let project;
+  try {
+    project = await prisma.project.findFirst({ where: { id: projectId } });
+  } catch {
+    return { error: "Internal server error", status: 500 } as const;
+  }
   if (!project) return { error: "Not found", status: 404 } as const;
   if (project.ownerId !== userId) return { error: "Forbidden", status: 403 } as const;
   return { project };
@@ -17,25 +22,22 @@ export async function GET(
 
   const { projectId } = await params;
 
-  const project = await prisma.project.findFirst({
-    where: { id: projectId },
-    select: {
-      ownerId: true,
-      collaborators: { select: { id: true, email: true, createdAt: true }, orderBy: { createdAt: "asc" } },
-    },
-  });
+  let project;
+  try {
+    project = await prisma.project.findFirst({
+      where: { id: projectId },
+      select: {
+        ownerId: true,
+        collaborators: { select: { id: true, email: true, createdAt: true }, orderBy: { createdAt: "asc" } },
+      },
+    });
+  } catch {
+    return Response.json({ error: "Internal server error" }, { status: 500 });
+  }
 
   if (!project) return Response.json({ error: "Not found" }, { status: 404 });
 
-  const isOwnerOrCollab =
-    project.ownerId === userId ||
-    project.collaborators.some((c) => {
-      // we don't have caller email here — we allow any authenticated project member
-      // The page-level access check already guards the workspace; this just gates the API.
-      return false;
-    });
-
-  // Re-check: owner always allowed; collaborators need email match
+  // Owner always allowed; collaborators need email match
   const client = await clerkClient();
   let callerEmail: string | null = null;
   try {
@@ -53,20 +55,18 @@ export async function GET(
 
   if (!hasAccess) return Response.json({ error: "Forbidden" }, { status: 403 });
 
-  // Enrich with Clerk profile data
-  const emails = project.collaborators.map((c) => c.email);
-  let clerkUsers: Record<string, { name: string; avatar: string | null }> = {};
+  // Enrich owner + collaborators from Clerk
+  const collabEmails = project.collaborators.map((c) => c.email);
+  const allEmails = callerEmail && !collabEmails.includes(callerEmail)
+    ? [callerEmail, ...collabEmails]
+    : collabEmails;
 
-  if (emails.length > 0) {
+  let clerkUsers: Record<string, { name: string; avatar: string | null }> = {};
+  if (allEmails.length > 0) {
     try {
-      const results = await client.users.getUserList({
-        emailAddress: emails,
-        limit: 100,
-      });
+      const results = await client.users.getUserList({ emailAddress: allEmails, limit: 100 });
       for (const u of results.data) {
-        const email =
-          u.emailAddresses.find((e) => e.id === u.primaryEmailAddressId)
-            ?.emailAddress;
+        const email = u.emailAddresses.find((e) => e.id === u.primaryEmailAddressId)?.emailAddress;
         if (email) {
           const name =
             [u.firstName, u.lastName].filter(Boolean).join(" ").trim() ||
@@ -80,6 +80,14 @@ export async function GET(
     }
   }
 
+  const isOwner = project.ownerId === userId;
+
+  const owner = {
+    email: callerEmail ?? "",
+    name: callerEmail ? (clerkUsers[callerEmail]?.name ?? callerEmail) : "Unknown",
+    avatar: callerEmail ? (clerkUsers[callerEmail]?.avatar ?? null) : null,
+  };
+
   const collaborators = project.collaborators.map((c) => ({
     id: c.id,
     email: c.email,
@@ -87,7 +95,7 @@ export async function GET(
     avatar: clerkUsers[c.email]?.avatar ?? null,
   }));
 
-  return Response.json({ collaborators, isOwner: project.ownerId === userId });
+  return Response.json({ owner, collaborators, isOwner });
 }
 
 export async function POST(
