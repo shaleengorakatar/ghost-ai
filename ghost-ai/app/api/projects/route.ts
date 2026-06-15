@@ -20,7 +20,12 @@ export async function POST(request: Request) {
 
   const body = await request.json().catch(() => ({}));
   const name = (body.name as string | undefined)?.trim() || "Untitled Project";
-  const roomId = (body.roomId as string | undefined)?.trim() || undefined;
+  const rawRoomId = (body.roomId as string | undefined)?.trim();
+  const ROOM_ID_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+  const roomId =
+    rawRoomId && rawRoomId.length <= 128 && ROOM_ID_RE.test(rawRoomId)
+      ? rawRoomId
+      : undefined;
 
   try {
     const project = await prisma.project.create({

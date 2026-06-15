@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
 export interface Project {
@@ -47,13 +47,20 @@ export function useProjectActions(initialProjects: Project[]) {
     setError(null);
   }
 
-  const slug = nameInput
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
+  const slug = useMemo(
+    () =>
+      nameInput
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, ""),
+    [nameInput]
+  );
 
-  const roomId = slug ? `${slug}-${roomSuffix}` : "";
+  const roomId = useMemo(
+    () => (slug ? `${slug}-${roomSuffix}` : ""),
+    [slug, roomSuffix]
+  );
 
   async function handleCreate() {
     if (!slug) return;
@@ -73,6 +80,8 @@ export function useProjectActions(initialProjects: Project[]) {
         const data = await res.json().catch(() => ({}));
         setError(data.error ?? "Failed to create project");
       }
+    } catch {
+      setError("Failed to create project");
     } finally {
       setLoading(false);
     }
@@ -100,6 +109,8 @@ export function useProjectActions(initialProjects: Project[]) {
         const data = await res.json().catch(() => ({}));
         setError(data.error ?? "Failed to rename project");
       }
+    } catch {
+      setError("Failed to rename project");
     } finally {
       setLoading(false);
     }
@@ -125,6 +136,8 @@ export function useProjectActions(initialProjects: Project[]) {
         const data = await res.json().catch(() => ({}));
         setError(data.error ?? "Failed to delete project");
       }
+    } catch {
+      setError("Failed to delete project");
     } finally {
       setLoading(false);
     }

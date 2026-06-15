@@ -10,7 +10,12 @@ export async function PATCH(
   if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const { projectId } = await params;
-  const project = await prisma.project.findFirst({ where: { id: projectId } });
+  let project;
+  try {
+    project = await prisma.project.findFirst({ where: { id: projectId } });
+  } catch {
+    return Response.json({ error: "Internal server error" }, { status: 500 });
+  }
 
   if (!project) return Response.json({ error: "Not found" }, { status: 404 });
   if (project.ownerId !== userId)
@@ -42,7 +47,12 @@ export async function DELETE(
   if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const { projectId } = await params;
-  const project = await prisma.project.findFirst({ where: { id: projectId } });
+  let project;
+  try {
+    project = await prisma.project.findFirst({ where: { id: projectId } });
+  } catch {
+    return Response.json({ error: "Internal server error" }, { status: 500 });
+  }
 
   if (!project) return Response.json({ error: "Not found" }, { status: 404 });
   if (project.ownerId !== userId)

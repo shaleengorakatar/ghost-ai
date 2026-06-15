@@ -8,7 +8,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Goal
 
-- Feature 03: Auth — Clerk wired into Next.js with route protection, sign-in/sign-up pages, and UserButton.
+- Feature 09 (TBD)
 
 ## Completed
 
@@ -19,6 +19,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - Feature 05: Prisma — multi-file schema (prisma/schema.prisma + prisma/models/project.prisma) with Project and ProjectCollaborator models; Prisma client generated to app/generated/prisma; lib/prisma.ts cached singleton branching on DATABASE_URL (prisma+postgres:// → Accelerate via accelerateUrl + withAccelerate(), else → @prisma/adapter-pg); migration SQL created and applied; npm run build passes.
 - Feature 06: Projects APIs — REST route handlers for GET /api/projects (list), POST /api/projects (create, defaults name to "Untitled Project"), PATCH /api/projects/[projectId] (rename, owner-only), DELETE /api/projects/[projectId] (delete, owner-only); 401 for unauthenticated, 403 for non-owner mutations; lib/prisma.ts return typed as PrismaClient to resolve Accelerate union type issue; npm run build passes.
 - Feature 07: Wire Editor Home — editor page converted to async server component fetching owned projects via lib/projects.ts (getOwnedProjects); EditorHome client component receives initialProjects; useProjectActions hook (replaces useProjectDialogs) generates slug+unique suffix as roomId, POSTs with roomId used as project ID, navigates to /editor/[roomId] on create, redirects to /editor if deleting active workspace otherwise router.refresh(); create dialog shows Room ID preview; npm run build passes.
+- Feature 08: Editor Workspace Shell — lib/project-access.ts with getCurrentUser (Clerk userId + primary email) and getProjectWithAccess (owner or collaborator by email); AccessDenied component (centred, lock icon, back link via Button render prop); app/editor/[roomId]/page.tsx server component (redirect unauth → /sign-in, show AccessDenied for missing/unauthorized projects); WorkspaceShell client component (full-viewport layout: navbar with project name + Share button + AI sidebar toggle, ProjectSidebar with activeProjectId highlight, canvas placeholder, collapsible AI sidebar placeholder); EditorNavbar extended with optional projectName/aiSidebarOpen/onToggleAISidebar; ProjectSidebar extended with optional activeProjectId; no TypeScript errors in new files.
 
 ## In Progress
 
@@ -26,7 +27,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Feature 08 (TBD)
+- Feature 09 (TBD)
 
 ## Open Questions
 
