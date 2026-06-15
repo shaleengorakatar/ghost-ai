@@ -5,25 +5,33 @@ export async function getCurrentUser() {
   const { userId } = await auth();
   if (!userId) return null;
 
-  const client = await clerkClient();
-  const user = await client.users.getUser(userId);
-  const email =
-    user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId)
-      ?.emailAddress ?? null;
-
-  return { userId, email };
+  try {
+    const client = await clerkClient();
+    const user = await client.users.getUser(userId);
+    const email =
+      user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId)
+        ?.emailAddress ?? null;
+    return { userId, email };
+  } catch {
+    return null;
+  }
 }
 
 export async function getProjectWithAccess(projectId: string, userId: string, email: string | null) {
-  const project = await prisma.project.findUnique({
-    where: { id: projectId },
-    select: {
-      id: true,
-      name: true,
-      ownerId: true,
-      collaborators: { select: { email: true } },
-    },
-  });
+  let project;
+  try {
+    project = await prisma.project.findUnique({
+      where: { id: projectId },
+      select: {
+        id: true,
+        name: true,
+        ownerId: true,
+        collaborators: { select: { email: true } },
+      },
+    });
+  } catch {
+    return null;
+  }
 
   if (!project) return null;
 

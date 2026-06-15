@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { PrismaClientKnownRequestError } from "@prisma/client-runtime-utils";
 import prisma from "@/lib/prisma";
 
 export async function PATCH(

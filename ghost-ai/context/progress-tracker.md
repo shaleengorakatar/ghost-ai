@@ -8,7 +8,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Goal
 
-- Feature 09 (TBD)
+- Feature 10 (TBD)
 
 ## Completed
 
@@ -20,6 +20,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - Feature 06: Projects APIs — REST route handlers for GET /api/projects (list), POST /api/projects (create, defaults name to "Untitled Project"), PATCH /api/projects/[projectId] (rename, owner-only), DELETE /api/projects/[projectId] (delete, owner-only); 401 for unauthenticated, 403 for non-owner mutations; lib/prisma.ts return typed as PrismaClient to resolve Accelerate union type issue; npm run build passes.
 - Feature 07: Wire Editor Home — editor page converted to async server component fetching owned projects via lib/projects.ts (getOwnedProjects); EditorHome client component receives initialProjects; useProjectActions hook (replaces useProjectDialogs) generates slug+unique suffix as roomId, POSTs with roomId used as project ID, navigates to /editor/[roomId] on create, redirects to /editor if deleting active workspace otherwise router.refresh(); create dialog shows Room ID preview; npm run build passes.
 - Feature 08: Editor Workspace Shell — lib/project-access.ts with getCurrentUser (Clerk userId + primary email) and getProjectWithAccess (owner or collaborator by email); AccessDenied component (centred, lock icon, back link via Button render prop); app/editor/[roomId]/page.tsx server component (redirect unauth → /sign-in, show AccessDenied for missing/unauthorized projects); WorkspaceShell client component (full-viewport layout: navbar with project name + Share button + AI sidebar toggle, ProjectSidebar with activeProjectId highlight, canvas placeholder, collapsible AI sidebar placeholder); EditorNavbar extended with optional projectName/aiSidebarOpen/onToggleAISidebar; ProjectSidebar extended with optional activeProjectId; no TypeScript errors in new files.
+- Feature 09: Share Dialog — GET/POST/DELETE /api/projects/[projectId]/collaborators route; collaborator list enriched with Clerk display name + avatar via getUserList; ShareDialog client component (copy link with Copied! feedback, invite-by-email form owner-only, collaborator list with avatars, remove button owner-only); shadcn Avatar component added; WorkspaceShell Share button wired to open dialog; isOwner passed from server page; npm run build passes.
 
 ## In Progress
 
@@ -27,7 +28,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Feature 09 (TBD)
+- Feature 10 (TBD)
 
 ## Open Questions
 

@@ -19,6 +19,7 @@ export default async function WorkspacePage({ params }: WorkspacePageProps) {
 
   const owned = await getOwnedProjects();
   const projects = owned.map((p) => ({ id: p.id, name: p.name, owned: true }));
+  const isOwner = project.ownerId === user.userId;
 
-  return <WorkspaceShell project={project} initialProjects={projects} />;
+  return <WorkspaceShell project={project} initialProjects={projects} isOwner={isOwner} />;
 }
