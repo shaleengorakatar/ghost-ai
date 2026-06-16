@@ -1,17 +1,21 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useContext } from "react";
 import {
   BaseEdge,
   EdgeLabelRenderer,
   getSmoothStepPath,
-  useReactFlow,
 } from "@xyflow/react";
 import type { EdgeProps } from "@xyflow/react";
 import type { CanvasEdge } from "@/types/canvas";
+import { OnEdgesChangeContext } from "@/components/editor/canvas-context";
 
 export function CanvasEdgeRenderer({
   id,
+  source,
+  target,
+  sourceHandleId,
+  targetHandleId,
   sourceX,
   sourceY,
   targetX,
@@ -26,7 +30,7 @@ export function CanvasEdgeRenderer({
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(data?.label ?? "");
   const inputRef = useRef<HTMLInputElement>(null);
-  const { setEdges } = useReactFlow();
+  const onEdgesChange = useContext(OnEdgesChangeContext);
 
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
@@ -46,17 +50,26 @@ export function CanvasEdgeRenderer({
   }, [data?.label, editing]);
 
   useEffect(() => {
-    if (editing) inputRef.current?.focus();
+    if (editing) requestAnimationFrame(() => inputRef.current?.focus());
   }, [editing]);
 
   const commitLabel = useCallback(() => {
     setEditing(false);
-    setEdges((eds) =>
-      eds.map((e) =>
-        e.id === id ? { ...e, data: { ...e.data, label: draft.trim() } } : e,
-      ),
-    );
-  }, [id, draft, setEdges]);
+    onEdgesChange?.([{
+      type: "replace",
+      id,
+      item: {
+        id,
+        source,
+        target,
+        sourceHandle: sourceHandleId ?? null,
+        targetHandle: targetHandleId ?? null,
+        type: "canvasEdge",
+        data: { ...data, label: draft.trim() },
+        markerEnd,
+      } as CanvasEdge,
+    }]);
+  }, [id, source, target, sourceHandleId, targetHandleId, data, draft, markerEnd, onEdgesChange]);
 
   const label = data?.label ?? "";
   const showHint = isActive && !label && !editing;
@@ -90,6 +103,7 @@ export function CanvasEdgeRenderer({
       />
       <EdgeLabelRenderer>
         <div
+          className="nopan"
           style={{
             position: "absolute",
             transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
@@ -121,10 +135,10 @@ export function CanvasEdgeRenderer({
                 border: "1px solid rgba(99,102,241,0.5)",
                 borderRadius: 9999,
                 color: "#e2e2e8",
-                fontSize: 11,
+                fontSize: 13,
                 padding: "2px 8px",
                 outline: "none",
-                width: Math.max(60, draft.length * 7 + 20),
+                width: Math.max(60, draft.length * 8 + 20),
                 textAlign: "center",
                 fontFamily: "inherit",
               }}
@@ -136,7 +150,7 @@ export function CanvasEdgeRenderer({
                 border: "1px solid rgba(255,255,255,0.1)",
                 borderRadius: 9999,
                 color: "#a0a0b0",
-                fontSize: 11,
+                fontSize: 13,
                 padding: "2px 8px",
                 userSelect: "none",
                 whiteSpace: "nowrap",

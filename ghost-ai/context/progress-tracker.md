@@ -8,7 +8,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Goal
 
-- Feature 19 (TBD)
+- Feature 22 (TBD)
 
 ## Completed
 
@@ -31,7 +31,10 @@ Update this file whenever the current phase, active feature, or implementation s
 
 - Feature 16: Edge Behaviour — CanvasEdge type extended with EdgeData (label field); handles on all four sides (top/right/bottom/left) as subtle white dots with dark border, hidden by default and fade in on node hover via Tailwind group-hover; CanvasEdgeRenderer custom edge using getSmoothStepPath for right-angle routing, BaseEdge for the visible stroke, wide transparent hit path for easy clicking; dimmed at rest, brightened on hover/selection; EdgeLabelRenderer positions label at path midpoint; double-click opens input that grows with text, saves on blur/Enter/Escape; saved labels shown as pill badges; faint hint when active edge has no label; all interactions stop propagation; defaultEdgeOptions sets type+arrowhead for new connections; npm run build passes.
 - Feature 17: Canvas Ergonomics — floating pill control bar at bottom-left with zoom out/fit view/zoom in and undo/redo groups separated by a divider; zoom actions use ReactFlow instance with 200ms animation; undo/redo wired to Liveblocks useUndo/useRedo hooks; undo/redo buttons disabled (dimmed) when canUndo/canRedo is false; useKeyboardShortcuts hook in hooks/ listens on window, skips editable fields, handles +/= zoom in, - zoom out, Cmd/Ctrl+Z undo, Cmd/Ctrl+Shift+Z redo, Cmd/Ctrl+Y redo; MiniMap removed; npm run build passes.
-- Feature 18: Starter Templates — starter-templates.ts defines CanvasTemplate type and CANVAS_TEMPLATES array (Microservices, CI/CD Pipeline, Event-Driven System) using shared NodeData/EdgeData types and NODE_COLORS palette; StarterTemplatesModal renders a scrollable grid of template cards each with a lightweight SVG preview (bounds-fitted, shape-accurate, edges as lines between centers); "Templates" button added to workspace navbar; onImport clears and replaces canvas nodes+edges via flow.setNodes/setEdges through existing Liveblocks collaborative state, then fitView; stamped { template, ts } state ensures re-importing the same template re-fires the effect; npm run build passes.
+- Feature 18: Starter Templates — starter-templates.ts defines CanvasTemplate type and CANVAS_TEMPLATES array (Microservices, CI/CD Pipeline, Event-Driven System) using shared NodeData/EdgeData types and NODE_COLORS palette; StarterTemplatesModal renders a scrollable grid of template cards each with a lightweight SVG preview (bounds-fitted, shape-accurate, edges as lines between centers); "Templates" button added to workspace navbar; onImport clears and replaces canvas nodes+edges via onNodesChange/onEdgesChange (remove+add changes) through Liveblocks collaborative state, then fitView; stamped { template, ts } state ensures re-importing the same template re-fires the effect; edge label commits route through OnEdgesChangeContext (replace change) instead of setEdges to stay in Liveblocks sync pipeline; canvas-context.ts holds the shared context to avoid circular imports; npm run build passes.
+- Feature 19: Presence Avatars & Live Cursors — liveblocks.config.ts Presence field renamed isThinking→thinking; PresenceAvatars component (presence-avatars.tsx) renders inside canvas top-right: useOthers() filtered to exclude self, up to 5 overlapping avatar chips with photo/initials fallback and cursorColor ring, +N overflow chip, divider only when collaborators exist, Clerk UserButton alongside; LiveCursors component inside canvas-wrapper.tsx renders other participants' cursors using flow coords from presence converted to canvas-relative pixels via useViewport transform (flowX*zoom+vpX); cursor position broadcast via useUpdateMyPresence on ReactFlow onMouseMove (screenToFlowPosition), cleared on onMouseLeave; editor home navbar unchanged; npm run build passes.
+- Feature 20: AI Sidebar Shell — AISidebar extracted into components/editor/ai-sidebar.tsx; floats over the canvas as an absolute-positioned right panel with slide-in/out via translate-x; header with Bot icon, "AI Workspace" title, "Collaborate with Ghost AI" subtitle, close button; shadcn Tabs with AI Architect and Specs tabs; active tab styled with bg-accent-primary/text-white; AI Architect tab has empty state (bot icon + description + 3 starter chips as bg-subtle pills), scrollable chat area with right-aligned user messages (bg-brand-dim, border-brand/50) and left-aligned assistant messages (bg-elevated, border-surface-border), auto-resizing textarea (min 72px, max 160px), Send button (bg-accent-primary), Enter submits/Shift+Enter newline; Specs tab has Generate Spec button and a static demo spec card (bg-elevated, border-surface-border, file icon, title, snippet, disabled Download); missing color tokens (bg-base, bg-elevated, bg-subtle, border-surface, text-primary, text-muted, accent-ai, accent-ai-text) added to globals.css; npm run build passes.
+- Feature 21: Canvas Autosave — @vercel/blob installed; existing canvasJsonPath field on Project model reused for blob URL; PUT /api/projects/[projectId]/canvas uploads canvas JSON to Vercel Blob and stores returned URL on Prisma record; GET /api/projects/[projectId]/canvas reads blob URL from Prisma and proxies JSON back; hooks/use-autosave.ts watches nodes+edges, debounces saves at 1500ms, tracks SaveStatus (idle/saving/saved/error); FlowCanvas loads saved canvas on mount only when Liveblocks room is empty (skips load if nodes or edges already exist); save status shown inline in Share button (Saving…/Saved/Error); npm run build passes.
 
 ## In Progress
 
@@ -39,7 +42,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Feature 19 (TBD)
+- Feature 22 (TBD)
 
 ## Open Questions
 
@@ -56,7 +59,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - Liveblocks node client in lib/liveblocks.ts uses a Proxy to defer secret key validation to runtime (avoids build-time errors when env vars are absent).
 - roomId doubles as Prisma project ID — generated as slug + unique suffix at create time and used as the Liveblocks room ID.
 - CanvasNode and CanvasEdge are typed generics over NodeData/EdgeData with literal type discriminants ("canvasNode" / "canvasEdge") so nodeTypes/edgeTypes stay fully typed without casting beyond the registration site.
-- Edge labels are stored in EdgeData.label and updated via setEdges — not through Liveblocks triggerEdgeChanges — because useLiveblocksFlow exposes setEdges and the collaborative sync happens automatically through the same flow state.
+- Edge labels are stored in EdgeData.label and committed via onEdgesChange([{ type: "replace", ... }]) routed through OnEdgesChangeContext — not via setEdges from useReactFlow, which bypasses Liveblocks sync in controlled mode. Context lives in canvas-context.ts to avoid circular imports between canvas-wrapper and canvas-edge.
 - Handles are typed as source-only on all four sides; React Flow allows connecting any source→source pair, so target discrimination is unnecessary and avoids double-handle overlap.
 
 ## Session Notes

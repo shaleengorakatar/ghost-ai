@@ -7,6 +7,7 @@ interface KeyboardShortcutsOptions {
   flow: ReactFlowInstance<Node, Edge> | null;
   undo: () => void;
   redo: () => void;
+  deleteSelected?: () => void;
 }
 
 function isEditableTarget(e: KeyboardEvent): boolean {
@@ -18,7 +19,7 @@ function isEditableTarget(e: KeyboardEvent): boolean {
   return false;
 }
 
-export function useKeyboardShortcuts({ flow, undo, redo }: KeyboardShortcutsOptions) {
+export function useKeyboardShortcuts({ flow, undo, redo, deleteSelected }: KeyboardShortcutsOptions) {
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (isEditableTarget(e)) return;
@@ -50,9 +51,18 @@ export function useKeyboardShortcuts({ flow, undo, redo }: KeyboardShortcutsOpti
         redo();
         return;
       }
+      if (!meta && (e.key === "Delete" || e.key === "Backspace")) {
+        if (!flow || !deleteSelected) return;
+        const hasSelection = flow.getNodes().some((n) => n.selected) || flow.getEdges().some((e) => e.selected);
+        if (hasSelection) {
+          e.preventDefault();
+          deleteSelected();
+        }
+        return;
+      }
     }
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [flow, undo, redo]);
+  }, [flow, undo, redo, deleteSelected]);
 }
