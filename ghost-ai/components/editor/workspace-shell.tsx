@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, Share2, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Sparkles, Share2, PanelLeftClose, PanelLeftOpen, LayoutTemplate } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { ProjectSidebar } from "@/components/editor/project-sidebar";
@@ -12,6 +12,8 @@ import {
 } from "@/components/editor/project-dialogs";
 import { ShareDialog } from "@/components/editor/share-dialog";
 import { CanvasWrapper } from "@/components/editor/canvas-wrapper";
+import { StarterTemplatesModal } from "@/components/editor/starter-templates-modal";
+import type { CanvasTemplate } from "@/components/editor/starter-templates";
 import { useProjectActions, Project } from "@/hooks/use-project-actions";
 
 interface WorkspaceShellProps {
@@ -24,6 +26,8 @@ export function WorkspaceShell({ project, initialProjects, isOwner }: WorkspaceS
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [aiSidebarOpen, setAISidebarOpen] = useState(true);
   const [shareOpen, setShareOpen] = useState(false);
+  const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [templateToLoad, setTemplateToLoad] = useState<{ template: CanvasTemplate; ts: number } | null>(null);
   const actions = useProjectActions(initialProjects);
 
   return (
@@ -50,6 +54,10 @@ export function WorkspaceShell({ project, initialProjects, isOwner }: WorkspaceS
         </div>
 
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs" onClick={() => setTemplatesOpen(true)}>
+            <LayoutTemplate className="h-3.5 w-3.5" />
+            Templates
+          </Button>
           <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs" onClick={() => setShareOpen(true)}>
             <Share2 className="h-3.5 w-3.5" />
             Share
@@ -84,7 +92,7 @@ export function WorkspaceShell({ project, initialProjects, isOwner }: WorkspaceS
 
         {/* Canvas */}
         <main className="flex-1 min-w-0 relative overflow-hidden bg-[#0d0d0f] m-2 rounded-xl">
-          <CanvasWrapper roomId={project.id} />
+          <CanvasWrapper roomId={project.id} templateToLoad={templateToLoad} />
         </main>
 
         {/* AI Sidebar */}
@@ -130,6 +138,11 @@ export function WorkspaceShell({ project, initialProjects, isOwner }: WorkspaceS
         onOpenChange={setShareOpen}
         projectId={project.id}
         isOwner={isOwner}
+      />
+      <StarterTemplatesModal
+        open={templatesOpen}
+        onOpenChange={setTemplatesOpen}
+        onImport={(template) => setTemplateToLoad({ template, ts: Date.now() })}
       />
     </div>
   );
