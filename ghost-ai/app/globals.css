@@ -41,6 +41,17 @@
     --color-accent-primary-dim: var(--accent-primary-dim);
     --color-bg-surface: var(--bg-surface);
     --color-background: var(--background);
+    --color-base: var(--bg-base);
+    --color-elevated: var(--bg-elevated);
+    --color-subtle: var(--bg-subtle);
+    --color-surface-border: var(--border-surface);
+    --color-primary-text: var(--text-primary);
+    --color-muted-text: var(--text-muted);
+    --color-copy-primary: var(--text-primary);
+    --color-accent-text: var(--accent-ai-text);
+    --color-brand: var(--accent-primary);
+    --color-brand-dim: var(--accent-primary-dim);
+    --color-accent-ai: var(--accent-ai);
     --radius-sm: calc(var(--radius) * 0.6);
     --radius-md: calc(var(--radius) * 0.8);
     --radius-lg: var(--radius);
@@ -121,6 +132,14 @@
     --accent-primary: #00c8d4;
     --accent-primary-dim: rgba(0, 200, 212, 0.12);
     --bg-surface: #111114;
+    --bg-base: #080809;
+    --bg-elevated: #18181c;
+    --bg-subtle: #1e1e23;
+    --border-surface: #2a2a30;
+    --text-primary: #f0f0f4;
+    --text-muted: #808090;
+    --accent-ai: #6457f9;
+    --accent-ai-text: #8b82ff;
 }
 }
 

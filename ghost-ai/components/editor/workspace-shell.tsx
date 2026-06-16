@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Sparkles, Share2, PanelLeftClose, PanelLeftOpen, LayoutTemplate } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
@@ -13,8 +13,10 @@ import {
 import { ShareDialog } from "@/components/editor/share-dialog";
 import { CanvasWrapper } from "@/components/editor/canvas-wrapper";
 import { StarterTemplatesModal } from "@/components/editor/starter-templates-modal";
+import { AISidebar } from "@/components/editor/ai-sidebar";
 import type { CanvasTemplate } from "@/components/editor/starter-templates";
 import { useProjectActions, Project } from "@/hooks/use-project-actions";
+import type { SaveStatus } from "@/hooks/use-autosave";
 
 interface WorkspaceShellProps {
   project: { id: string; name: string; ownerId: string };
@@ -28,6 +30,17 @@ export function WorkspaceShell({ project, initialProjects, isOwner }: WorkspaceS
   const [shareOpen, setShareOpen] = useState(false);
   const [templatesOpen, setTemplatesOpen] = useState(false);
   const [templateToLoad, setTemplateToLoad] = useState<{ template: CanvasTemplate; ts: number } | null>(null);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
+  const saveFnRef = useRef<(() => void) | null>(null);
+  const handleSaveFn = useCallback((fn: () => void) => { saveFnRef.current = fn; }, []);
+
+  useEffect(() => {
+    if (saveStatus === "saved" || saveStatus === "error") {
+      const t = setTimeout(() => setSaveStatus("idle"), 2000);
+      return () => clearTimeout(t);
+    }
+  }, [saveStatus]);
+
   const actions = useProjectActions(initialProjects);
 
   return (
@@ -57,6 +70,15 @@ export function WorkspaceShell({ project, initialProjects, isOwner }: WorkspaceS
           <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs" onClick={() => setTemplatesOpen(true)}>
             <LayoutTemplate className="h-3.5 w-3.5" />
             Templates
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs min-w-[60px]"
+            onClick={() => saveFnRef.current?.()}
+            disabled={saveStatus === "saving"}
+          >
+            {saveStatus === "saving" ? "Saving..." : saveStatus === "saved" ? "Saved" : saveStatus === "error" ? "Error" : "Save"}
           </Button>
           <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs" onClick={() => setShareOpen(true)}>
             <Share2 className="h-3.5 w-3.5" />
@@ -92,42 +114,9 @@ export function WorkspaceShell({ project, initialProjects, isOwner }: WorkspaceS
 
         {/* Canvas */}
         <main className="flex-1 min-w-0 relative overflow-hidden bg-[#0d0d0f] m-2 rounded-xl">
-          <CanvasWrapper roomId={project.id} templateToLoad={templateToLoad} />
+          <CanvasWrapper roomId={project.id} templateToLoad={templateToLoad} onSaveStatus={setSaveStatus} onSaveFn={handleSaveFn} />
+          <AISidebar open={aiSidebarOpen} onClose={() => setAISidebarOpen(false)} />
         </main>
-
-        {/* AI Sidebar */}
-        {aiSidebarOpen && (
-          <aside className="w-72 shrink-0 m-2 ml-0 flex flex-col gap-3 overflow-y-auto">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-semibold">AI Copilot</p>
-                <p className="text-[11px] text-muted-foreground">Placeholder panel</p>
-              </div>
-              <Sparkles className="h-4 w-4 text-muted-foreground mt-0.5" />
-            </div>
-
-            <div className="rounded-xl border border-border bg-card p-4 flex gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-500/20">
-                <Sparkles className="h-4 w-4 text-violet-400" />
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium">Chat surface pending</p>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  The toggle is wired. Messaging and generation are intentionally out of scope here.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-auto rounded-xl border border-border bg-card p-4 space-y-1.5">
-              <p className="text-[10px] font-semibold tracking-[0.15em] text-muted-foreground uppercase">
-                Future Hooks
-              </p>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Prompt composer, run status, and architecture guidance will attach to this sidebar.
-              </p>
-            </div>
-          </aside>
-        )}
       </div>
 
       <CreateProjectDialog {...actions} />
