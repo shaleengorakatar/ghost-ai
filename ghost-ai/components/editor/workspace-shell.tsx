@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Compass, Sparkles, Share2, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Sparkles, Share2, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { ProjectSidebar } from "@/components/editor/project-sidebar";
@@ -11,6 +11,7 @@ import {
   DeleteProjectDialog,
 } from "@/components/editor/project-dialogs";
 import { ShareDialog } from "@/components/editor/share-dialog";
+import { CanvasWrapper } from "@/components/editor/canvas-wrapper";
 import { useProjectActions, Project } from "@/hooks/use-project-actions";
 
 interface WorkspaceShellProps {
@@ -82,28 +83,8 @@ export function WorkspaceShell({ project, initialProjects, isOwner }: WorkspaceS
         />
 
         {/* Canvas */}
-        <main className="flex-1 min-w-0 relative overflow-hidden bg-[#0d0d0f] m-2 rounded-xl flex items-center justify-center">
-          {/* Radial glow */}
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <div className="h-[500px] w-[500px] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(20,184,166,0.08)_0%,transparent_70%)]" />
-          </div>
-
-          <div className="relative flex flex-col items-center gap-4 text-center px-6 max-w-lg">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#0d9488]/40 bg-[#0d9488]/10">
-              <Compass className="h-7 w-7 text-[#2dd4bf]" />
-            </div>
-            <p className="text-[10px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-              Workspace Shell
-            </p>
-            <h1 className="text-2xl font-semibold leading-snug">
-              Canvas and collaboration tooling land here next.
-            </h1>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              This room is ready for the shared architecture canvas, durable AI workflows, and
-              real-time presence. For now, the shell is wired with project context and navigation
-              only.
-            </p>
-          </div>
+        <main className="flex-1 min-w-0 relative overflow-hidden bg-[#0d0d0f] m-2 rounded-xl">
+          <CanvasWrapper roomId={project.id} />
         </main>
 
         {/* AI Sidebar */}

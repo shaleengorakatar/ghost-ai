@@ -8,7 +8,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Goal
 
-- Feature 10 (TBD)
+- Feature 13 (TBD)
 
 ## Completed
 
@@ -21,6 +21,9 @@ Update this file whenever the current phase, active feature, or implementation s
 - Feature 07: Wire Editor Home — editor page converted to async server component fetching owned projects via lib/projects.ts (getOwnedProjects); EditorHome client component receives initialProjects; useProjectActions hook (replaces useProjectDialogs) generates slug+unique suffix as roomId, POSTs with roomId used as project ID, navigates to /editor/[roomId] on create, redirects to /editor if deleting active workspace otherwise router.refresh(); create dialog shows Room ID preview; npm run build passes.
 - Feature 08: Editor Workspace Shell — lib/project-access.ts with getCurrentUser (Clerk userId + primary email) and getProjectWithAccess (owner or collaborator by email); AccessDenied component (centred, lock icon, back link via Button render prop); app/editor/[roomId]/page.tsx server component (redirect unauth → /sign-in, show AccessDenied for missing/unauthorized projects); WorkspaceShell client component (full-viewport layout: navbar with project name + Share button + AI sidebar toggle, ProjectSidebar with activeProjectId highlight, canvas placeholder, collapsible AI sidebar placeholder); EditorNavbar extended with optional projectName/aiSidebarOpen/onToggleAISidebar; ProjectSidebar extended with optional activeProjectId; no TypeScript errors in new files.
 - Feature 09: Share Dialog — GET/POST/DELETE /api/projects/[projectId]/collaborators route; collaborator list enriched with Clerk display name + avatar via getUserList; ShareDialog client component (copy link with Copied! feedback, invite-by-email form owner-only, collaborator list with avatars, remove button owner-only); shadcn Avatar component added; WorkspaceShell Share button wired to open dialog; isOwner passed from server page; npm run build passes.
+- Feature 10: Liveblocks Setup — liveblocks.config.ts defines Presence (cursor + isThinking) and UserMeta (name, avatar, cursorColor); cached Liveblocks node client in lib/liveblocks.ts with Proxy pattern to defer secret key validation to runtime; getCursorColor helper maps userId to deterministic color from fixed palette; POST /api/liveblocks-auth verifies Clerk auth + project access, ensures room exists (create if missing), returns prepareSession token with user name/avatar/cursorColor; @liveblocks/node installed; npm run build passes.
+- Feature 11: Base Canvas — types/canvas.ts defines NodeData (label, color, shape), CanvasNode, CanvasEdge; CanvasWrapper client component sets up LiveblocksProvider (/api/liveblocks-auth) + RoomProvider (initialPresence cursor:null) + ClientSideSuspense with error fallback; FlowCanvas uses useLiveblocksFlow with suspense:true and renders ReactFlow with dot-pattern Background, MiniMap, fitView, and connectOnClick loose connections; WorkspaceShell canvas placeholder replaced with CanvasWrapper; npm run build passes.
+- Feature 12: Shape Panel — ShapeType extended to rectangle/diamond/circle/pill/cylinder/hexagon in types/canvas.ts; ShapePanel floating pill toolbar at bottom-center with draggable SVG icon buttons for all six shapes (drag payload: shape name + default size via application/ghost-shape data transfer); CanvasNodeRenderer custom node type renders bordered rectangle with centered label and top/bottom handles; FlowCanvas wired with nodeTypes, onDragOver, onDrop (screenToFlowPosition, onNodesChange add change); node IDs use shape+timestamp+counter; npm run build passes.
 
 ## In Progress
 
@@ -28,7 +31,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Feature 10 (TBD)
+- Feature 13 (TBD)
 
 ## Open Questions
 

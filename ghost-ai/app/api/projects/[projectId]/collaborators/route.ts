@@ -55,16 +55,31 @@ export async function GET(
 
   if (!hasAccess) return Response.json({ error: "Forbidden" }, { status: 403 });
 
-  // Enrich owner + collaborators from Clerk
-  const collabEmails = project.collaborators.map((c) => c.email);
-  const allEmails = callerEmail && !collabEmails.includes(callerEmail)
-    ? [callerEmail, ...collabEmails]
-    : collabEmails;
+  // Fetch the actual project owner's profile from Clerk
+  let ownerEmail: string | null = null;
+  let ownerName = "Unknown";
+  let ownerAvatar: string | null = null;
+  try {
+    const ownerUser = await client.users.getUser(project.ownerId);
+    ownerEmail =
+      ownerUser.emailAddresses.find((e) => e.id === ownerUser.primaryEmailAddressId)
+        ?.emailAddress ?? null;
+    ownerName =
+      [ownerUser.firstName, ownerUser.lastName].filter(Boolean).join(" ").trim() ||
+      ownerUser.username ||
+      ownerEmail ||
+      "Unknown";
+    ownerAvatar = ownerUser.imageUrl ?? null;
+  } catch {
+    // fall through — show fallback
+  }
 
+  // Enrich collaborators from Clerk
+  const collabEmails = project.collaborators.map((c) => c.email);
   let clerkUsers: Record<string, { name: string; avatar: string | null }> = {};
-  if (allEmails.length > 0) {
+  if (collabEmails.length > 0) {
     try {
-      const results = await client.users.getUserList({ emailAddress: allEmails, limit: 100 });
+      const results = await client.users.getUserList({ emailAddress: collabEmails, limit: 100 });
       for (const u of results.data) {
         const email = u.emailAddresses.find((e) => e.id === u.primaryEmailAddressId)?.emailAddress;
         if (email) {
@@ -83,9 +98,9 @@ export async function GET(
   const isOwner = project.ownerId === userId;
 
   const owner = {
-    email: callerEmail ?? "",
-    name: callerEmail ? (clerkUsers[callerEmail]?.name ?? callerEmail) : "Unknown",
-    avatar: callerEmail ? (clerkUsers[callerEmail]?.avatar ?? null) : null,
+    email: ownerEmail ?? "",
+    name: ownerName,
+    avatar: ownerAvatar,
   };
 
   const collaborators = project.collaborators.map((c) => ({
