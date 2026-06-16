@@ -6,10 +6,15 @@ export async function GET() {
   const { userId } = await auth();
   if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  const projects = await prisma.project.findMany({
-    where: { ownerId: userId },
-    orderBy: { createdAt: "desc" },
-  });
+  let projects;
+  try {
+    projects = await prisma.project.findMany({
+      where: { ownerId: userId },
+      orderBy: { createdAt: "desc" },
+    });
+  } catch {
+    return Response.json({ error: "Internal server error" }, { status: 500 });
+  }
 
   return Response.json(projects);
 }

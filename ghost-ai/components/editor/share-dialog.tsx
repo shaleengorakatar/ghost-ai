@@ -12,11 +12,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
-interface Collaborator {
-  id: string;
+interface Member {
   email: string;
   name: string;
   avatar: string | null;
+}
+
+interface Collaborator extends Member {
+  id: string;
 }
 
 interface ShareDialogProps {
@@ -26,7 +29,64 @@ interface ShareDialogProps {
   isOwner: boolean;
 }
 
+function RoleBadge({ role }: { role: "Owner" | "Editor" }) {
+  return (
+    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">
+      {role}
+    </span>
+  );
+}
+
+function MemberRow({
+  member,
+  role,
+  onRemove,
+  removing,
+  canRemove,
+}: {
+  member: Member & { id?: string };
+  role: "Owner" | "Editor";
+  onRemove?: () => void;
+  removing?: boolean;
+  canRemove: boolean;
+}) {
+  return (
+    <li className="flex items-center gap-3">
+      <Avatar className="h-7 w-7 shrink-0">
+        {member.avatar && <AvatarImage src={member.avatar} alt={member.name} />}
+        <AvatarFallback className="text-[10px]">
+          {member.name.slice(0, 2).toUpperCase()}
+        </AvatarFallback>
+      </Avatar>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm leading-none truncate">{member.name}</p>
+        {member.name !== member.email && (
+          <p className="text-xs text-muted-foreground truncate">{member.email}</p>
+        )}
+      </div>
+      <RoleBadge role={role} />
+      {canRemove && onRemove && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+          disabled={removing}
+          onClick={onRemove}
+          aria-label={`Remove ${member.name}`}
+        >
+          {removing ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Trash2 className="h-3.5 w-3.5" />
+          )}
+        </Button>
+      )}
+    </li>
+  );
+}
+
 export function ShareDialog({ open, onOpenChange, projectId, isOwner }: ShareDialogProps) {
+  const [owner, setOwner] = useState<Member | null>(null);
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [loading, setLoading] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
@@ -42,6 +102,7 @@ export function ShareDialog({ open, onOpenChange, projectId, isOwner }: ShareDia
       const res = await fetch(`/api/projects/${projectId}/collaborators`);
       if (res.ok) {
         const data = await res.json();
+        setOwner(data.owner);
         setCollaborators(data.collaborators);
       }
     } finally {
@@ -102,6 +163,8 @@ export function ShareDialog({ open, onOpenChange, projectId, isOwner }: ShareDia
     setTimeout(() => setCopied(false), 2000);
   }
 
+  const hasMembers = owner || collaborators.length > 0;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -113,9 +176,18 @@ export function ShareDialog({ open, onOpenChange, projectId, isOwner }: ShareDia
         <div className="flex items-center gap-2">
           <div className="flex flex-1 items-center gap-2 rounded-md border border-border bg-muted px-3 py-2 text-sm text-muted-foreground truncate">
             <Link className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">{typeof window !== "undefined" ? `${window.location.origin}/editor/${projectId}` : ""}</span>
+            <span className="truncate">
+              {typeof window !== "undefined"
+                ? `${window.location.origin}/editor/${projectId}`
+                : ""}
+            </span>
           </div>
-          <Button variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={handleCopyLink}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 shrink-0"
+            onClick={handleCopyLink}
+          >
             {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
             {copied ? "Copied!" : "Copy"}
           </Button>
@@ -137,8 +209,17 @@ export function ShareDialog({ open, onOpenChange, projectId, isOwner }: ShareDia
                 className="flex-1 h-9 text-sm"
                 disabled={inviting}
               />
-              <Button type="submit" size="sm" className="gap-1.5 h-9" disabled={inviting || !inviteEmail.trim()}>
-                {inviting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserPlus className="h-3.5 w-3.5" />}
+              <Button
+                type="submit"
+                size="sm"
+                className="gap-1.5 h-9"
+                disabled={inviting || !inviteEmail.trim()}
+              >
+                {inviting ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <UserPlus className="h-3.5 w-3.5" />
+                )}
                 Invite
               </Button>
             </div>
@@ -146,10 +227,10 @@ export function ShareDialog({ open, onOpenChange, projectId, isOwner }: ShareDia
           </form>
         )}
 
-        {/* Collaborator list */}
+        {/* People list */}
         <div className="flex flex-col gap-1">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
-            {collaborators.length === 0 && !loading ? "No collaborators yet" : "Collaborators"}
+            People with access
           </p>
           {loading ? (
             <div className="flex items-center justify-center py-6">
@@ -157,38 +238,26 @@ export function ShareDialog({ open, onOpenChange, projectId, isOwner }: ShareDia
             </div>
           ) : (
             <ul className="flex flex-col gap-2">
+              {owner && (
+                <MemberRow
+                  member={owner}
+                  role="Owner"
+                  canRemove={false}
+                />
+              )}
               {collaborators.map((c) => (
-                <li key={c.id} className="flex items-center gap-3">
-                  <Avatar className="h-7 w-7 shrink-0">
-                    {c.avatar && <AvatarImage src={c.avatar} alt={c.name} />}
-                    <AvatarFallback className="text-[10px]">
-                      {c.name.slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm leading-none truncate">{c.name}</p>
-                    {c.name !== c.email && (
-                      <p className="text-xs text-muted-foreground truncate">{c.email}</p>
-                    )}
-                  </div>
-                  {isOwner && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                      disabled={removingId === c.id}
-                      onClick={() => handleRemove(c.id)}
-                      aria-label={`Remove ${c.name}`}
-                    >
-                      {removingId === c.id ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <Trash2 className="h-3.5 w-3.5" />
-                      )}
-                    </Button>
-                  )}
-                </li>
+                <MemberRow
+                  key={c.id}
+                  member={c}
+                  role="Editor"
+                  canRemove={isOwner}
+                  removing={removingId === c.id}
+                  onRemove={() => handleRemove(c.id)}
+                />
               ))}
+              {!hasMembers && (
+                <li className="text-xs text-muted-foreground py-1">No members yet.</li>
+              )}
             </ul>
           )}
         </div>
