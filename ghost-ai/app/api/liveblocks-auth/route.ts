@@ -19,11 +19,15 @@ export async function POST(request: Request) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  // Ensure the Liveblocks room exists
+  // Ensure the Liveblocks room exists; ignore 409 if two requests race to create it
   try {
     await liveblocks.getRoom(projectId);
   } catch {
-    await liveblocks.createRoom(projectId, { defaultAccesses: [] });
+    try {
+      await liveblocks.createRoom(projectId, { defaultAccesses: [] });
+    } catch {
+      // 409 Conflict — room was created by a concurrent request, proceed normally
+    }
   }
 
   // Fetch user profile from Clerk
